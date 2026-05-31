@@ -12,16 +12,16 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --ui-bg: #f4f1ec;
-    --ui-card: #fbf9f5;
-    --ui-border: #e8e3db;
-    --ui-text: #2a2520;
-    --ui-muted: #9a9086;
-    --ui-accent: #2a2520;
-    --mb-bg: #faf8f4;
-    --mb-ink: #2a2520;
-    --mb-accent: #c4a882;
-    --mb-line: rgba(42,37,32,0.12);
+    --ui-bg: #d4d5c2;
+    --ui-card: #e0e1d0;
+    --ui-border: #c1c2ad;
+    --ui-text: #766760;
+    --ui-muted: #a09590;
+    --ui-accent: #5f2e48;
+    --mb-bg: #c1c2ad;
+    --mb-ink: #766760;
+    --mb-accent: #5f2e48;
+    --mb-line: rgba(118,103,96,0.15);
   }
 
   body {
@@ -670,18 +670,18 @@
 
     <label>Hintergrundfarbe</label>
     <div class="color-row">
-      <input type="color" id="colorBg" value="#faf8f4">
-      <input type="text" id="colorBgHex" value="#faf8f4" maxlength="7" placeholder="#faf8f4">
+      <input type="color" id="colorBg" value="#c1c2ad">
+      <input type="text" id="colorBgHex" value="#c1c2ad" maxlength="7" placeholder="#c1c2ad">
     </div>
     <label>Textfarbe</label>
     <div class="color-row">
-      <input type="color" id="colorInk" value="#2a2520">
-      <input type="text" id="colorInkHex" value="#2a2520" maxlength="7" placeholder="#2a2520">
+      <input type="color" id="colorInk" value="#766760">
+      <input type="text" id="colorInkHex" value="#766760" maxlength="7" placeholder="#766760">
     </div>
     <label>Akzentfarbe</label>
     <div class="color-row">
-      <input type="color" id="colorAccent" value="#c4a882">
-      <input type="text" id="colorAccentHex" value="#c4a882" maxlength="7" placeholder="#c4a882">
+      <input type="color" id="colorAccent" value="#5f2e48">
+      <input type="text" id="colorAccentHex" value="#5f2e48" maxlength="7" placeholder="#5f2e48">
     </div>
 
     <label>Display-Schrift</label>
@@ -696,8 +696,8 @@
     <select id="fontBody">
       <option value="'Inter', sans-serif">Inter</option>
       <option value="'Montserrat', sans-serif">Montserrat</option>
-      <option value="'Karla', sans-serif" selected>Karla</option>
-      <option value="'Lato', sans-serif">Lato</option>
+      <option value="'Karla', sans-serif">Karla</option>
+      <option value="'Lato', sans-serif" selected>Lato</option>
       <option value="'Work Sans', sans-serif">Work Sans</option>
     </select>
   </div>
@@ -712,8 +712,8 @@
 
     <label>Basisfarbe für Palette</label>
     <div class="color-row">
-      <input type="color" id="paletteBase" value="#c4a882">
-      <input type="text" id="paletteBaseHex" value="#c4a882" maxlength="7">
+      <input type="color" id="paletteBase" value="#5f2e48">
+      <input type="text" id="paletteBaseHex" value="#5f2e48" maxlength="7">
     </div>
     <div style="margin-top:6px; font-size:10px; color:var(--ui-muted)">oder Foto hochladen →</div>
     <div class="upload-zone" style="margin-top:6px;" onclick="document.getElementById('palettePhoto').click()">
@@ -890,7 +890,7 @@ function updateSwatches() {
     if(el) el.style.background = c;
   });
 }
-generatePalette('#c4a882');
+generatePalette('#5f2e48');
 
 // ─── COLOR SYNC ───
 function syncColorPair(pickerEl, textEl, cssVar) {
@@ -1082,7 +1082,7 @@ Antworte NUR mit einem JSON-Array ohne Markdown oder sonstige Erklärungen:
 [{"piece":"Name","details":"Material, Schnitt (max 12 Wörter)","color_hex":"#xxxxxx"}]`;
 
   try {
-    const resp = await fetch('/api/clothing', {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
