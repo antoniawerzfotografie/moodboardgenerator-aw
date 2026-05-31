@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moodboard Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Italiana&family=DM+Serif+Display:ital@0;1&family=Libre+Bodoni:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&family=Montserrat:wght@300;400;500&family=Karla:wght@300;400;500&family=Lato:wght@300;400;700&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ui-bg: #f4f1ec;
+    --ui-card: #fbf9f5;
+    --ui-border: #e8e3db;
+    --ui-text: #2a2520;
+    --ui-muted: #9a9086;
+    --ui-accent: #2a2520;
+    --mb-bg: #faf8f4;
+    --mb-ink: #2a2520;
+    --mb-accent: #c4a882;
+    --mb-line: rgba(42,37,32,0.12);
+  }
+
+  body {
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    font-family: 'Karla', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    width: 320px;
+    min-width: 320px;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--ui-card);
+    border-right: 1px solid var(--ui-border);
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-track { background: transparent; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--ui-border); border-radius: 2px; }
+
+  .sidebar-header {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ui-text);
+    margin-bottom: 4px;
+  }
+  .sidebar-sub {
+    font-size: 11px;
+    color: var(--ui-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .section {
+    border-top: 1px solid var(--ui-border);
+    padding: 16px 0;
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ui-muted);
+    margin-bottom: 12px;
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--ui-muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    margin-top: 10px;
+  }
+  label:first-child { margin-top: 0; }
+
+  input[type="text"],
+  input[type="color"] ~ input[type="text"],
+  select {
+    width: 100%;
+    background: var(--ui-bg);
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-family: 'Karla', sans-serif;
+    font-size: 12px;
+    color: var(--ui-text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus, select:focus { border-color: var(--ui-accent); }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  input[type="color"] {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 2px;
+    background: var(--ui-bg);
+    flex-shrink: 0;
+  }
+  .color-row input[type="text"] {
+    flex: 1;
+    font-family: 'Karla', monospace;
+    font-size: 12px;
+  }
+
+  .font-row { display: flex; flex-direction: column; gap: 6px; }
+  .font-group { display: flex; flex-direction: column; gap: 4px; }
+  .font-group-label { font-size: 10px; color: var(--ui-muted); }
+  select { font-size: 12px; }
+
+  /* Upload */
+  .upload-zone {
+    border: 1px dashed var(--ui-border);
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--ui-bg);
+    transition: border-color 0.2s, background 0.2s;
+    font-size: 11px;
+    color: var(--ui-muted);
+  }
+  .upload-zone:hover { border-color: var(--ui-accent); background: #f7f4ef; }
+  .upload-zone input { display: none; }
+  .upload-preview {
+    width: 100%;
+    max-height: 60px;
+    object-fit: contain;
+    display: none;
+    margin-top: 8px;
+    border-radius: 3px;
+  }
+
+  /* Toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .toggle-label { font-size: 11px; color: var(--ui-text); font-weight: 500; }
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--ui-border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--ui-accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+  /* Button groups */
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .btn-option {
+    padding: 5px 11px;
+    border: 1px solid var(--ui-border);
+    border-radius: 3px;
+    background: var(--ui-bg);
+    font-family: 'Karla', sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--ui-text);
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .btn-option:hover { border-color: var(--ui-text); }
+  .btn-option.active {
+    background: var(--ui-text);
+    color: white;
+    border-color: var(--ui-text);
+  }
+
+  /* Palette preview */
+  #palette-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .swatch-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+    cursor: default;
+  }
+
+  /* Photo upload grid */
+  .photo-grid-upload {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .photo-slot {
+    aspect-ratio: 3/4;
+    border: 1px dashed var(--ui-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ui-bg);
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .photo-slot:hover { border-color: var(--ui-accent); }
+  .photo-slot input { display: none; }
+  .photo-slot img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .photo-slot-label {
+    font-size: 11px;
+    color: var(--ui-muted);
+    text-align: center;
+  }
+
+  /* Main buttons */
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--ui-text);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Karla', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 4px;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    font-family: 'Karla', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    display: none;
+  }
+  .btn-secondary:hover { border-color: var(--ui-text); }
+
+  .status-msg {
+    font-size: 11px;
+    color: var(--ui-muted);
+    text-align: center;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  /* ─── MAIN / MOODBOARD AREA ─── */
+  #main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    overflow: auto;
+    background: var(--ui-bg);
+  }
+
+  #mb-wrapper {
+    width: 100%;
+    max-width: 960px;
+  }
+
+  /* ─── MOODBOARD ─── */
+  #moodboard {
+    background: var(--mb-bg);
+    aspect-ratio: 4/3;
+    width: 100%;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--mb-ink);
+    display: flex;
+    flex-direction: column;
+    padding: 40px 48px 28px;
+    position: relative;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  /* MB Header */
+  .mb-header {
+    text-align: center;
+    position: relative;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+  }
+  .mb-studio-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mb-ink);
+    font-family: 'Karla', sans-serif;
+    font-weight: 500;
+    opacity: 0.55;
+    line-height: 1.3;
+    max-width: 120px;
+    text-align: right;
+  }
+  .mb-logo-img {
+    position: absolute;
+    top: 0;
+    right: 0;
+    max-height: 44px;
+    max-width: 110px;
+    object-fit: contain;
+    object-position: right top;
+  }
+  .mb-title {
+    font-size: clamp(22px, 3.2vw, 40px);
+    font-weight: 300;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    color: var(--mb-ink);
+    font-family: var(--font-display, 'Cormorant Garamond'), serif;
+  }
+  .mb-subtitle {
+    font-size: clamp(8px, 1vw, 11px);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--mb-ink);
+    opacity: 0.55;
+    margin-top: 7px;
+    font-family: 'Karla', sans-serif;
+    font-weight: 400;
+  }
+  .mb-header-line {
+    width: 40px;
+    height: 1px;
+    background: var(--mb-accent);
+    margin: 12px auto 0;
+  }
+
+  /* MB Grid */
+  .mb-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    gap: 18px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Col 1: Vision */
+  .mb-col-vision {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: hidden;
+  }
+  .mb-vision-table {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mb-vision-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .mb-vision-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mb-ink);
+    opacity: 0.45;
+    font-family: var(--font-body, 'Karla'), sans-serif;
+    font-style: italic;
+  }
+  .mb-vision-value {
+    font-family: var(--font-display, 'Cormorant Garamond'), serif;
+    font-size: clamp(12px, 1.4vw, 16px);
+    font-weight: 400;
+    color: var(--mb-ink);
+    line-height: 1.2;
+  }
+
+  .mb-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--mb-line);
+  }
+
+  .mb-palette-label {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mb-ink);
+    opacity: 0.45;
+    font-family: var(--font-body, 'Karla'), sans-serif;
+    margin-bottom: 7px;
+  }
+  .mb-palette-circles {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .mb-swatch {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.07);
+    flex-shrink: 0;
+  }
+
+  /* Col 2: Photo Grid */
+  .mb-col-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+  }
+  .mb-photo-cell {
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+    background: var(--ui-border);
+    border-radius: 2px;
+  }
+  .mb-photo-cell img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .mb-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ede9e2;
+    color: #bbb;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    font-family: 'Karla', sans-serif;
+  }
+
+  /* Col 3: Clothing */
+  .mb-col-clothing {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .mb-clothing-title {
+    font-family: var(--font-display, 'Cormorant Garamond'), serif;
+    font-size: clamp(11px, 1.3vw, 14px);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--mb-ink);
+    margin-bottom: 10px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+  .mb-outfit-list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0;
+    overflow: hidden;
+  }
+  .mb-outfit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--mb-line);
+    min-height: 0;
+  }
+  .mb-outfit-item:last-child { border-bottom: none; }
+  .mb-outfit-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .mb-outfit-text { flex: 1; min-width: 0; }
+  .mb-outfit-piece {
+    font-family: var(--font-display, 'Cormorant Garamond'), serif;
+    font-size: clamp(11px, 1.3vw, 14px);
+    font-weight: 600;
+    color: var(--mb-ink);
+    line-height: 1.2;
+    display: block;
+  }
+  .mb-outfit-details {
+    font-family: var(--font-body, 'Karla'), sans-serif;
+    font-size: clamp(8px, 0.9vw, 10px);
+    color: var(--mb-ink);
+    opacity: 0.5;
+    margin-top: 1px;
+    display: block;
+    line-height: 1.35;
+  }
+
+  /* MB Footer */
+  .mb-footer {
+    flex-shrink: 0;
+    margin-top: 16px;
+    padding-top: 10px;
+    border-top: 1px solid var(--mb-line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mb-footer-tags {
+    font-family: var(--font-body, 'Karla'), sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mb-ink);
+    opacity: 0.45;
+  }
+  .mb-footer-credit {
+    font-family: var(--font-body, 'Karla'), sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mb-ink);
+    opacity: 0.45;
+    text-align: right;
+  }
+
+  /* Placeholder state */
+  #mb-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    color: var(--ui-muted);
+  }
+  #mb-placeholder svg { opacity: 0.25; }
+  #mb-placeholder p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    opacity: 0.5;
+  }
+  #mb-placeholder small {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    opacity: 0.4;
+  }
+
+  .loading-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(250,248,244,0.9);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10;
+  }
+  .loading-overlay.active { display: flex; }
+  .spinner {
+    width: 24px; height: 24px;
+    border: 2px solid var(--ui-border);
+    border-top-color: var(--ui-text);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-family: 'Karla', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ui-muted);
+    text-transform: uppercase;
+  }
+
+  /* hidden canvas for color extraction */
+  #color-canvas { display: none; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-header">Moodboard</div>
+  <div class="sidebar-sub">Generator</div>
+
+  <!-- BRANDING -->
+  <div class="section">
+    <div class="section-label">Branding</div>
+
+    <label>Logo (PNG / SVG)</label>
+    <div class="upload-zone" onclick="document.getElementById('logoInput').click()">
+      <span id="logo-zone-text">Datei auswählen oder hierher ziehen</span>
+      <input type="file" id="logoInput" accept="image/png,image/svg+xml">
+      <img id="logo-preview" class="upload-preview">
+    </div>
+
+    <label>Studio-Name (Fallback)</label>
+    <input type="text" id="studioName" value="Antonia Werz Fotografie" placeholder="Studio-Name">
+
+    <label>Hintergrundfarbe</label>
+    <div class="color-row">
+      <input type="color" id="colorBg" value="#faf8f4">
+      <input type="text" id="colorBgHex" value="#faf8f4" maxlength="7" placeholder="#faf8f4">
+    </div>
+    <label>Textfarbe</label>
+    <div class="color-row">
+      <input type="color" id="colorInk" value="#2a2520">
+      <input type="text" id="colorInkHex" value="#2a2520" maxlength="7" placeholder="#2a2520">
+    </div>
+    <label>Akzentfarbe</label>
+    <div class="color-row">
+      <input type="color" id="colorAccent" value="#c4a882">
+      <input type="text" id="colorAccentHex" value="#c4a882" maxlength="7" placeholder="#c4a882">
+    </div>
+
+    <label>Display-Schrift</label>
+    <select id="fontDisplay">
+      <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+      <option value="'Playfair Display', serif">Playfair Display</option>
+      <option value="'Italiana', serif">Italiana</option>
+      <option value="'DM Serif Display', serif">DM Serif Display</option>
+      <option value="'Libre Bodoni', serif">Libre Bodoni</option>
+    </select>
+    <label>Body-Schrift</label>
+    <select id="fontBody">
+      <option value="'Inter', sans-serif">Inter</option>
+      <option value="'Montserrat', sans-serif">Montserrat</option>
+      <option value="'Karla', sans-serif" selected>Karla</option>
+      <option value="'Lato', sans-serif">Lato</option>
+      <option value="'Work Sans', sans-serif">Work Sans</option>
+    </select>
+  </div>
+
+  <!-- INHALT -->
+  <div class="section">
+    <div class="section-label">Inhalt</div>
+    <label>Titel</label>
+    <input type="text" id="mbTitle" value="Golden Hour" placeholder="z.B. Golden Hour">
+    <label>Untertitel</label>
+    <input type="text" id="mbSubtitle" value="Familien-Shooting · Sommer 2025" placeholder="z.B. Familien-Shooting · Sommer 2025">
+
+    <label>Basisfarbe für Palette</label>
+    <div class="color-row">
+      <input type="color" id="paletteBase" value="#c4a882">
+      <input type="text" id="paletteBaseHex" value="#c4a882" maxlength="7">
+    </div>
+    <div style="margin-top:6px; font-size:10px; color:var(--ui-muted)">oder Foto hochladen →</div>
+    <div class="upload-zone" style="margin-top:6px;" onclick="document.getElementById('palettePhoto').click()">
+      <span>Foto für Farbextraktion</span>
+      <input type="file" id="palettePhoto" accept="image/*">
+    </div>
+    <div id="palette-row" style="margin-top:8px;">
+      <div class="swatch-circle" id="sw0"></div>
+      <div class="swatch-circle" id="sw1"></div>
+      <div class="swatch-circle" id="sw2"></div>
+      <div class="swatch-circle" id="sw3"></div>
+      <div class="swatch-circle" id="sw4"></div>
+    </div>
+  </div>
+
+  <!-- SHOOTING -->
+  <div class="section">
+    <div class="section-label">Shooting</div>
+    <label>Location</label>
+    <div class="btn-group" id="locationGroup">
+      <button class="btn-option active" data-val="Indoor">Indoor</button>
+      <button class="btn-option" data-val="Studio">Studio</button>
+      <button class="btn-option" data-val="Wiese">Wiese</button>
+      <button class="btn-option" data-val="Feld">Feld</button>
+      <button class="btn-option" data-val="Wald">Wald</button>
+      <button class="btn-option" data-val="Düne">Düne</button>
+    </div>
+    <label style="margin-top:10px;">Shooting-Art</label>
+    <div class="btn-group" id="typeGroup">
+      <button class="btn-option active" data-val="Familie">Familie</button>
+      <button class="btn-option" data-val="Newborn">Newborn</button>
+      <button class="btn-option" data-val="Babybauch">Babybauch</button>
+      <button class="btn-option" data-val="Business">Business</button>
+      <button class="btn-option" data-val="Hochzeit">Hochzeit</button>
+      <button class="btn-option" data-val="Paar">Paar</button>
+    </div>
+    <label style="margin-top:10px;">Stilrichtung</label>
+    <div class="btn-group" id="styleGroup">
+      <button class="btn-option active" data-val="Clean">Clean</button>
+      <button class="btn-option" data-val="Boho">Boho</button>
+      <button class="btn-option" data-val="Chic">Chic</button>
+      <button class="btn-option" data-val="Editorial">Editorial</button>
+      <button class="btn-option" data-val="Vintage">Vintage</button>
+      <button class="btn-option" data-val="Modern">Modern</button>
+    </div>
+  </div>
+
+  <!-- BILDER -->
+  <div class="section">
+    <div class="section-label">Bilder</div>
+    <div class="toggle-row">
+      <span class="toggle-label">Unsplash-Inspiration</span>
+      <label class="toggle"><input type="checkbox" id="toggleUnsplash" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div id="ownPhotosSection">
+      <div class="toggle-row">
+        <span class="toggle-label">Eigene Fotos</span>
+        <label class="toggle"><input type="checkbox" id="toggleOwn"><span class="toggle-slider"></span></label>
+      </div>
+      <div id="photoUploadGrid" style="display:none;">
+        <div class="photo-grid-upload">
+          <div class="photo-slot" onclick="this.querySelector('input').click()" id="ps0">
+            <input type="file" accept="image/*"><img><div class="photo-slot-label">Foto 1</div>
+          </div>
+          <div class="photo-slot" onclick="this.querySelector('input').click()" id="ps1">
+            <input type="file" accept="image/*"><img><div class="photo-slot-label">Foto 2</div>
+          </div>
+          <div class="photo-slot" onclick="this.querySelector('input').click()" id="ps2">
+            <input type="file" accept="image/*"><img><div class="photo-slot-label">Foto 3</div>
+          </div>
+          <div class="photo-slot" onclick="this.querySelector('input').click()" id="ps3">
+            <input type="file" accept="image/*"><img><div class="photo-slot-label">Foto 4</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOTHING KI -->
+  <div class="section">
+    <div class="section-label">Outfit-Inspiration</div>
+    <div class="toggle-row">
+      <span class="toggle-label">KI-Vorschläge</span>
+      <label class="toggle"><input type="checkbox" id="toggleClothing" checked><span class="toggle-slider"></span></label>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="section" style="border-bottom:none; padding-bottom:0;">
+    <button class="btn-primary" id="btnGenerate">Moodboard generieren</button>
+    <button class="btn-secondary" id="btnDownload">PNG herunterladen</button>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="mb-wrapper">
+    <div id="moodboard">
+      <!-- Placeholder -->
+      <div id="mb-placeholder">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="26" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="4" y="26" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="26" y="26" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <p>Dein Moodboard</p>
+        <small>Einstellungen wählen & generieren</small>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Generiere Moodboard…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="color-canvas"></canvas>
+
+<script>
+// ─── STATE ───
+const state = {
+  logo: null,
+  palette: ['#e8ddd0','#d4c4b0','#c4a882','#a08060','#7a5e40'],
+  ownPhotos: [null, null, null, null],
+  outfits: null,
+  generated: false
+};
+
+// ─── UTILS ───
+function hexToHsl(hex) {
+  let r = parseInt(hex.slice(1,3),16)/255;
+  let g = parseInt(hex.slice(3,5),16)/255;
+  let b = parseInt(hex.slice(5,7),16)/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h,s,l = (max+min)/2;
+  if(max===min){h=s=0;}else{
+    const d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}
+    h/=6;
+  }
+  return [h*360,s*100,l*100];
+}
+function hslToHex(h,s,l){
+  h/=360;s/=100;l/=100;
+  let r,g,b;
+  if(s===0){r=g=b=l;}else{
+    const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
+    r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);
+  }
+  return '#'+[r,g,b].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+}
+function hue2rgb(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
+
+function generatePalette(baseHex) {
+  if(!/^#[0-9a-fA-F]{6}$/.test(baseHex)) return;
+  const [h,s,l] = hexToHsl(baseHex);
+  state.palette = [
+    hslToHex(h, Math.min(s*0.5,30), Math.min(l+28,92)),
+    hslToHex(h, Math.min(s*0.7,50), Math.min(l+14,82)),
+    baseHex,
+    hslToHex(h, Math.min(s*1.1,80), Math.max(l-14,15)),
+    hslToHex(h, Math.min(s*1.2,85), Math.max(l-26,8))
+  ];
+  updateSwatches();
+}
+function updateSwatches() {
+  state.palette.forEach((c,i)=>{
+    const el = document.getElementById('sw'+i);
+    if(el) el.style.background = c;
+  });
+}
+generatePalette('#c4a882');
+
+// ─── COLOR SYNC ───
+function syncColorPair(pickerEl, textEl, cssVar) {
+  pickerEl.addEventListener('input', ()=>{ textEl.value=pickerEl.value; updateMbVar(cssVar,pickerEl.value); });
+  textEl.addEventListener('input', ()=>{
+    if(/^#[0-9a-fA-F]{6}$/.test(textEl.value)){
+      pickerEl.value=textEl.value;
+      updateMbVar(cssVar,textEl.value);
+    }
+  });
+}
+function updateMbVar(name,val){ document.getElementById('moodboard').style.setProperty(name,val); }
+syncColorPair(document.getElementById('colorBg'),document.getElementById('colorBgHex'),'--mb-bg');
+syncColorPair(document.getElementById('colorInk'),document.getElementById('colorInkHex'),'--mb-ink');
+syncColorPair(document.getElementById('colorAccent'),document.getElementById('colorAccentHex'),'--mb-accent');
+
+// Palette base
+const paletteColorPicker = document.getElementById('paletteBase');
+const paletteHexInput = document.getElementById('paletteBaseHex');
+paletteColorPicker.addEventListener('input', ()=>{
+  paletteHexInput.value = paletteColorPicker.value;
+  generatePalette(paletteColorPicker.value);
+});
+paletteHexInput.addEventListener('input', ()=>{
+  if(/^#[0-9a-fA-F]{6}$/.test(paletteHexInput.value)){
+    paletteColorPicker.value = paletteHexInput.value;
+    generatePalette(paletteHexInput.value);
+  }
+});
+
+// ─── PALETTE FROM PHOTO ───
+document.getElementById('palettePhoto').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.getElementById('color-canvas');
+      canvas.width=80;canvas.height=80;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,80,80);
+      const data=ctx.getImageData(0,0,80,80).data;
+      let r=0,g=0,b=0,count=0;
+      for(let i=0;i<data.length;i+=16){
+        r+=data[i];g+=data[i+1];b+=data[i+2];count++;
+      }
+      r=Math.round(r/count);g=Math.round(g/count);b=Math.round(b/count);
+      const hex='#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+      paletteColorPicker.value=hex;
+      paletteHexInput.value=hex;
+      generatePalette(hex);
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// ─── LOGO UPLOAD ───
+document.getElementById('logoInput').addEventListener('change', function(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    state.logo=ev.target.result;
+    const prev=document.getElementById('logo-preview');
+    prev.src=state.logo;
+    prev.style.display='block';
+    document.getElementById('logo-zone-text').textContent='Logo geladen';
+  };
+  reader.readAsDataURL(file);
+});
+
+// ─── FONT SELECTION ───
+document.getElementById('fontDisplay').addEventListener('change', function(){
+  document.getElementById('moodboard').style.setProperty('--font-display', this.value);
+});
+document.getElementById('fontBody').addEventListener('change', function(){
+  document.getElementById('moodboard').style.setProperty('--font-body', this.value);
+});
+
+// ─── BUTTON GROUPS ───
+document.querySelectorAll('.btn-group').forEach(group=>{
+  group.querySelectorAll('.btn-option').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      group.querySelectorAll('.btn-option').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+});
+function getActive(groupId){ return document.querySelector(`#${groupId} .btn-option.active`)?.dataset.val||''; }
+
+// ─── TOGGLES ───
+document.getElementById('toggleOwn').addEventListener('change', function(){
+  document.getElementById('photoUploadGrid').style.display = this.checked?'block':'none';
+  document.getElementById('toggleUnsplash').checked = !this.checked;
+});
+document.getElementById('toggleUnsplash').addEventListener('change', function(){
+  if(!this.checked) {
+    document.getElementById('toggleOwn').checked = true;
+    document.getElementById('photoUploadGrid').style.display='block';
+  } else {
+    document.getElementById('toggleOwn').checked = false;
+    document.getElementById('photoUploadGrid').style.display='none';
+  }
+});
+
+// ─── OWN PHOTO UPLOADS ───
+[0,1,2,3].forEach(i=>{
+  const slot = document.getElementById('ps'+i);
+  const input = slot.querySelector('input');
+  input.addEventListener('change', function(e){
+    const file=e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      state.ownPhotos[i]=ev.target.result;
+      const img=slot.querySelector('img');
+      img.src=ev.target.result;
+      img.style.display='block';
+      slot.querySelector('.photo-slot-label').style.display='none';
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+// ─── UNSPLASH URLS ───
+function getUnsplashUrls(location, type, style) {
+  const keywords = [style, type, location, 'photography', 'family'].filter(Boolean).join(',');
+  const seeds = [1,2,3,4];
+  return seeds.map(s=>`https://source.unsplash.com/600x800/?${encodeURIComponent(keywords)}&sig=${s}`);
+}
+
+// ─── CLOTHING AI ───
+const STATIC_OUTFITS = {
+  Familie: [
+    {piece:'Leinenblusenkleid',details:'Cremeweiß, fließend, Maxi-Länge, naturbelassen',color_hex:'#e8e0d2'},
+    {piece:'Washed-Denim Shirt',details:'Hellblau, leicht oversized, rollbare Ärmel',color_hex:'#aabfcf'},
+    {piece:'Cord-Latzhose',details:'Sandfarbig, weiter Schnitt, für Kleinkinder',color_hex:'#c9b99a'},
+    {piece:'Knit-Cardigan',details:'Warmweiß, grob gestrickt, offene Silhouette',color_hex:'#f0ebe1'}
+  ],
+  Newborn: [
+    {piece:'Wickelkleid Musselin',details:'Blush, zartes Gewebe, V-Ausschnitt',color_hex:'#e8c9c0'},
+    {piece:'Strampler Rib-Knit',details:'Off-White, eng, weicher Baumwoll-Stretch',color_hex:'#f2ede6'},
+    {piece:'Strickbody',details:'Salbeigrün, fein, für Neugeborene',color_hex:'#a8c4a8'},
+    {piece:'Wrap Top',details:'Sandbeige, lockerer Fall, Langarm',color_hex:'#d4c4a8'}
+  ],
+  Babybauch: [
+    {piece:'Seidenkleid Empire',details:'Champagner, fließend, betont Bauch',color_hex:'#d4c4a0'},
+    {piece:'Off-Shoulder Maxikleid',details:'Warmweiß, weicher Jersey, bodenlang',color_hex:'#f0ebe0'},
+    {piece:'Stretchkleid Midi',details:'Camel, figurbetonend, Rundhals',color_hex:'#c0a080'},
+    {piece:'Lace-Robe',details:'Beige, fließend, Boho-Schnitt',color_hex:'#e0d0b8'}
+  ],
+  Business: [
+    {piece:'Blazer Tailored',details:'Greige, tailliert, Strukturgewebe',color_hex:'#c0b0a0'},
+    {piece:'Seidenshirt',details:'Cremeweiß, fließend, schlichter Kragen',color_hex:'#f5f0e8'},
+    {piece:'High-Waist Trousers',details:'Taupe, Bundfalte, weites Bein',color_hex:'#b8a898'},
+    {piece:'Trenchcoat',details:'Kamel, klassisch, tailliert',color_hex:'#c8a870'}
+  ],
+  Hochzeit: [
+    {piece:'Rückenfreies Kleid',details:'Elfenbein, Crêpe, A-Linie',color_hex:'#f5f0e5'},
+    {piece:'Leinenanzug',details:'Ivory, Slim Fit, Doppelreiher',color_hex:'#e8e0d0'},
+    {piece:'Tüllkleid',details:'Blush, mehrlagig, romantisch',color_hex:'#f0d8d0'},
+    {piece:'Anzug Merinowolle',details:'Dunkelgrau, Slim, zeitlos',color_hex:'#606070'}
+  ],
+  Paar: [
+    {piece:'Leinenhemd',details:'Weißgespült, locker, offener Kragen',color_hex:'#f0ebe0'},
+    {piece:'Maxi-Wickelkleid',details:'Terrakotta, tailliert, Boho',color_hex:'#c87050'},
+    {piece:'Chino',details:'Sandbeige, Slim Fit, naturell',color_hex:'#d4c4a0'},
+    {piece:'Off-Shoulder Bluse',details:'Cremeweiß, Rüschen, romantisch',color_hex:'#f5f0e8'}
+  ]
+};
+
+async function fetchOutfits(type, location, style, palette) {
+  const toggleOn = document.getElementById('toggleClothing').checked;
+  if(!toggleOn) return getStaticOutfits(type);
+
+  const paletteStr = palette.join(', ');
+  const prompt = `Du bist ein Fashion-Stylist für Fotoshootings. 
+Shooting-Art: ${type}
+Location: ${location}  
+Stil: ${style}
+Farbpalette: ${paletteStr}
+
+Erstelle 4 konkrete Outfit-Vorschläge passend dazu.
+${(type==='Familie'||type==='Paar')?'Berücksichtige verschiedene Personen (z.B. Mama, Papa, Kind).':''}
+
+Antworte NUR mit einem JSON-Array ohne Markdown oder sonstige Erklärungen:
+[{"piece":"Name","details":"Material, Schnitt (max 12 Wörter)","color_hex":"#xxxxxx"}]`;
+
+  try {
+    const resp = await fetch('/api/clothing', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{role:'user',content:prompt}]
+      })
+    });
+    if(!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    const text = data.content[0].text.trim();
+    const clean = text.replace(/```json|```/g,'').trim();
+    return JSON.parse(clean);
+  } catch(e) {
+    return getStaticOutfits(type);
+  }
+}
+function getStaticOutfits(type) {
+  return STATIC_OUTFITS[type] || STATIC_OUTFITS['Familie'];
+}
+
+// ─── GENERATE MOODBOARD ───
+document.getElementById('btnGenerate').addEventListener('click', async ()=>{
+  const location = getActive('locationGroup');
+  const type = getActive('typeGroup');
+  const style = getActive('styleGroup');
+  const title = document.getElementById('mbTitle').value || 'Moodboard';
+  const subtitle = document.getElementById('mbSubtitle').value || '';
+  const studio = document.getElementById('studioName').value || 'Studio';
+  const useOwn = document.getElementById('toggleOwn').checked;
+
+  const overlay = document.getElementById('loadingOverlay');
+  const loadText = document.getElementById('loadingText');
+  overlay.classList.add('active');
+  loadText.textContent = 'Outfit-Vorschläge laden…';
+
+  // Get outfits
+  const outfits = await fetchOutfits(type, location, style, state.palette);
+  state.outfits = outfits;
+
+  loadText.textContent = 'Bilder laden…';
+
+  // Get photo URLs
+  let photoSrcs = useOwn ? state.ownPhotos : getUnsplashUrls(location, type, style);
+
+  loadText.textContent = 'Moodboard aufbauen…';
+
+  // Build moodboard
+  buildMoodboard({title, subtitle, studio, location, type, style, photoSrcs, outfits});
+
+  overlay.classList.remove('active');
+  document.getElementById('btnDownload').style.display='block';
+  document.getElementById('statusMsg').textContent = 'Moodboard bereit ✓';
+  state.generated = true;
+});
+
+function buildMoodboard({title, subtitle, studio, location, type, style, photoSrcs, outfits}) {
+  const mb = document.getElementById('moodboard');
+
+  // Apply fonts from selects
+  const fontDisplay = document.getElementById('fontDisplay').value;
+  const fontBody = document.getElementById('fontBody').value;
+  mb.style.setProperty('--font-display', fontDisplay);
+  mb.style.setProperty('--font-body', fontBody);
+
+  const moodStr = getMood(style, type);
+  const year = new Date().getFullYear();
+
+  mb.innerHTML = `
+    <div class="mb-header">
+      ${state.logo
+        ? `<img class="mb-logo-img" src="${state.logo}" alt="Logo">`
+        : `<div class="mb-studio-tag">${escHtml(studio)}</div>`
+      }
+      <div class="mb-title">${escHtml(title)}</div>
+      <div class="mb-subtitle">${escHtml(subtitle)}</div>
+      <div class="mb-header-line"></div>
+    </div>
+
+    <div class="mb-grid">
+      <!-- Col 1: Vision -->
+      <div class="mb-col-vision">
+        <div class="mb-vision-table">
+          <div class="mb-vision-row">
+            <div class="mb-vision-label">Stilrichtung</div>
+            <div class="mb-vision-value">${escHtml(style)}</div>
+          </div>
+          <div class="mb-divider"></div>
+          <div class="mb-vision-row">
+            <div class="mb-vision-label">Shooting</div>
+            <div class="mb-vision-value">${escHtml(type)}</div>
+          </div>
+          <div class="mb-divider"></div>
+          <div class="mb-vision-row">
+            <div class="mb-vision-label">Location</div>
+            <div class="mb-vision-value">${escHtml(location)}</div>
+          </div>
+          <div class="mb-divider"></div>
+          <div class="mb-vision-row">
+            <div class="mb-vision-label">Stimmung</div>
+            <div class="mb-vision-value">${escHtml(moodStr)}</div>
+          </div>
+        </div>
+        <div style="margin-top:auto; padding-top:12px;">
+          <div class="mb-palette-label">Farbpalette</div>
+          <div class="mb-palette-circles">
+            ${state.palette.map(c=>`<div class="mb-swatch" style="background:${c}"></div>`).join('')}
+          </div>
+          <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
+            ${state.palette.map(c=>`<div style="background:${c};height:6px;flex:1;border-radius:1px;min-width:12px;"></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 2: Photos -->
+      <div class="mb-col-photos" id="mb-photos">
+        ${[0,1,2,3].map(i=>`
+          <div class="mb-photo-cell" id="mpc${i}">
+            ${photoSrcs[i]
+              ? `<img src="${photoSrcs[i]}" alt="Photo ${i+1}">`
+              : `<div class="mb-photo-placeholder">—</div>`
+            }
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Col 3: Clothing -->
+      <div class="mb-col-clothing">
+        <div class="mb-clothing-title">Outfit Inspiration</div>
+        <div class="mb-outfit-list">
+          ${outfits.slice(0,4).map(o=>`
+            <div class="mb-outfit-item">
+              <div class="mb-outfit-dot" style="background:${o.color_hex||'#ccc'}"></div>
+              <div class="mb-outfit-text">
+                <span class="mb-outfit-piece">${escHtml(o.piece)}</span>
+                <span class="mb-outfit-details">${escHtml(o.details)}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-footer">
+      <div class="mb-footer-tags">${escHtml(style)} · ${escHtml(type)} · ${escHtml(location)}</div>
+      <div class="mb-footer-credit">Curated by ${escHtml(studio)} · ${year}</div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText"></div>
+    </div>
+  `;
+
+  // Load unsplash images (handle CORS gracefully)
+  if(!document.getElementById('toggleOwn').checked) {
+    [0,1,2,3].forEach(i=>{
+      const cell = document.getElementById('mpc'+i);
+      if(!cell) return;
+      const img = cell.querySelector('img');
+      if(img){
+        img.onerror = ()=>{
+          cell.innerHTML=`<div class="mb-photo-placeholder">Foto ${i+1}</div>`;
+        };
+      }
+    });
+  }
+}
+
+function getMood(style, type) {
+  const moodMap = {
+    Clean: 'Klar, licht, zeitlos',
+    Boho: 'Warm, natürlich, frei',
+    Chic: 'Elegant, verfeinert',
+    Editorial: 'Stark, modern, bold',
+    Vintage: 'Nostalgisch, weich, zart',
+    Modern: 'Frisch, klar, dynamisch'
+  };
+  return moodMap[style] || style;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── DOWNLOAD ───
+document.getElementById('btnDownload').addEventListener('click', async ()=>{
+  if(!state.generated) return;
+  const msg = document.getElementById('statusMsg');
+  msg.textContent = 'Export wird vorbereitet…';
+  try {
+    const mb = document.getElementById('moodboard');
+    const canvas = await html2canvas(mb, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null
+    });
+    const link = document.createElement('a');
+    link.download = 'moodboard.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    msg.textContent = 'PNG heruntergeladen ✓';
+  } catch(e) {
+    msg.textContent = 'Export fehlgeschlagen – bitte erneut versuchen.';
+  }
+});
+</script>
+</body>
+</html>
